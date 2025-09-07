@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>台北レストランガイド</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutrals -->
+    <!-- Application Structure Plan: このアプリケーションは、ユーザーが個々のニーズ（食事の時間、予算、料理の種類など）に基づいて最適なレストランを迅速に見つけられるよう、フィルター可能なダッシュボード構造を採用しています。静的なリストを単に表示するのではなく、インタラクティブなカードグリッドと連動するコントロールパネルを提供します。ユーザーはまずフィルターで選択肢を絞り込み、視覚的に整理されたカードで概要を把握し、興味を持ったレストランの詳細をクリックして確認するという直感的なフローを設計しました。このタスク指向のアプローチにより、情報探索の効率が大幅に向上し、意思決定が容易になります。 -->
+    <!-- Visualization & Content Choices: 1. レストランリスト -> 目標: 整理・比較 -> 手法: フィルタリング可能なカードグリッド (HTML/Tailwind) -> 操作: フィルター選択によるリアルタイムでのカード表示更新。理由: 多くの選択肢から条件に合うものを効率的に見つけるため。 2. 予算データ -> 目標: 比較 -> 手法: 棒グラフ (Chart.js/Canvas) -> 操作: フィルターに連動してグラフが動的に更新。理由: 選択肢の価格帯分布を視覚的に素早く把握できるため。 3. 詳細情報 -> 目標: 通知 -> 手法: クリックで展開するカード詳細 (HTML/Tailwind) -> 操作: カードクリックで詳細情報の表示・非表示を切り替え。理由: 初期画面の情報量を抑えつつ、詳細へのアクセスを容易にするため。 4. ミシュラン等の評価 -> 目標: 通知 -> 手法: アイコン風バッジ (HTML/CSS) -> 操作: なし。理由: レストランの権威性を一目で伝えるため。 -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            background-color: #FDFBF8;
+            color: #4A4A4A;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        .card-enter {
+            animation: fadeIn 0.5s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .filter-btn-active {
+            background-color: #C8A07D !important;
+            color: #FFFFFF !important;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .card-tag {
+            background-color: #EFEAE6;
+            color: #8D6E63;
+            padding: 2px 8px;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        .details-section {
+            transition: max-height 0.5s ease-in-out, opacity 0.5s ease-in-out;
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+        }
+        .details-section.open {
+            max-height: 1000px;
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <div class="container mx-auto p-4 md:p-8">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl md:text-5xl font-bold text-[#8D6E63] mb-2">台北レストランガイド</h1>
+            <p class="text-lg text-gray-600">あなたの好みに合わせて最高のお店を見つけよう</p>
+        </header>
+
+        <section id="filters" class="bg-white/80 backdrop-blur-sm rounded-2xl p-6 mb-8 shadow-lg sticky top-4 z-10">
+             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div>
+                    <label class="font-bold text-gray-700 mb-2 block">食事の時間</label>
+                    <div id="meal-type-filter" class="flex flex-wrap gap-2">
+                        <button data-filter-group="meal" data-filter-value="all" class="filter-btn-active px-4 py-2 bg-gray-200 text-gray-800 rounded-full text-sm font-semibold transition-all duration-300">すべて</button>
+                        <button data-filter-group="meal" data-filter-value="ランチ" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-full text-sm font-semibold transition-all duration-300">ランチ</button>
+                        <button data-filter-group="meal" data-filter-value="ディナー" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-full text-sm font-semibold transition-all duration-300">ディナー</button>
+                    </div>
+                </div>
+                <div>
+                    <label for="budget-filter" class="font-bold text-gray-700 mb-2 block">予算 (1人あたり)</label>
+                    <div class="flex items-center gap-4">
+                       <input id="budget-filter" type="range" min="300" max="1500" step="100" value="1500" class="w-full h-2 bg-[#EFEAE6] rounded-lg appearance-none cursor-pointer">
+                        <span id="budget-value" class="font-semibold text-[#C8A07D] w-24 text-right">〜 1500元</span>
+                    </div>
+                </div>
+                <div>
+                    <label class="font-bold text-gray-700 mb-2 block">特徴</label>
+                    <div id="feature-filter" class="flex flex-wrap gap-2">
+                        <button data-filter-group="feature" data-filter-value="reservable" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-full text-sm font-semibold transition-all duration-300">予約可能</button>
+                        <button data-filter-group="feature" data-filter-value="japanese-friendly" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-full text-sm font-semibold transition-all duration-300">日本語対応</button>
+                        <button data-filter-group="feature" data-filter-value="michelin" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-full text-sm font-semibold transition-all duration-300">ミシュラン掲載</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="chart-section" class="mb-8">
+             <div class="bg-white rounded-2xl p-4 md:p-6 shadow-md">
+                <h2 class="text-xl font-bold text-center text-gray-700 mb-4">レストラン予算比較</h2>
+                <p class="text-center text-gray-500 mb-4 text-sm">現在のフィルター条件に一致するレストランの価格帯分布です。お店選びの参考にしてください。</p>
+                <div class="chart-container">
+                    <canvas id="budgetChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <main id="restaurant-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        </main>
+    </div>
+
+    <script>
+        const restaurantData = [
+            {
+                id: 1, name: '鼎泰豊', type: 'ランチ', budget_min: 500, budget_max: 1000,
+                description: '世界的に有名な小籠包の専門店。薄い皮の中に熱々の濃厚なスープがたっぷり。',
+                recommended: ['小籠包', '海老チャーハン', '空心菜炒め', '酸辣湯'],
+                evaluation: '多くの国に進出しており、安定した美味しさで高い評価を得ている。トリップアドバイザーの「トラベラーズチョイス」受賞歴や、ミシュランのビブグルマン掲載店舗もあり。',
+                map_link: '#', hours: '店舗により異なる (例: 11:00-21:00)',
+                reservation: false, japanese_support: true, michelin: true,
+                tags: ['小籠包', '有名店']
+            },
+            {
+                id: 2, name: 'Li Yuan', type: 'ランチ', budget_min: 300, budget_max: 600,
+                description: '鼎泰豊と並び称される小籠包の人気店。皮が厚めで食べ応えがある。',
+                recommended: ['小籠包', '牡蠣小籠包', '海鮮チャーハン', 'ネギ餅'],
+                evaluation: 'コストパフォーマンスの高さで評価されている。スタッフが親切で、日本語メニューがあるという口コミも多い。',
+                map_link: '#', blog_link: '#', hours: '11:30-14:30, 16:30-21:30',
+                reservation: true, japanese_support: true, michelin: false,
+                tags: ['小籠包', '高コスパ']
+            },
+            {
+                id: 3, name: '鶏家荘', type: 'ランチ', budget_min: 500, budget_max: 800,
+                description: '創業50年以上の老舗台湾料理店。鶏料理が名物。',
+                recommended: ['三味鶏', '麻婆豆腐', '卵焼き', '鶏プリン'],
+                evaluation: 'ミシュランガイドのビブグルマンに掲載。高級感のある店構えだが、価格は比較的リーズナブル。',
+                map_link: '#', blog_link: '#', hours: '11:00-22:00',
+                reservation: true, japanese_support: true, michelin: true,
+                tags: ['鶏料理', '老舗']
+            },
+            {
+                id: 4, name: '阿城鵞鳥', type: 'ランチ', budget_min: 300, budget_max: 600,
+                description: 'ガチョウ肉の燻製料理が有名。噛めば噛むほど味わい深い。',
+                recommended: ['ガチョウ肉燻製', '鵝油飯（ガチョウ油ご飯）', '鴨血のスープ'],
+                evaluation: 'ミシュランガイドのビブグルマンに掲載。昼時は待ち時間が発生することも。',
+                map_link: '#', blog_link: '#', hours: '11:30-21:00',
+                reservation: true, japanese_support: false, michelin: true,
+                tags: ['ガチョウ肉', 'ローカル']
+            },
+            {
+                id: 5, name: '欣葉', type: 'ディナー', budget_min: 800, budget_max: 1500,
+                description: '創業40年以上の老舗。台北を代表する台湾料理レストラン。',
+                recommended: ['ワタリガニのおこわ', 'レバーステーキ', '豚の角煮', 'シジミの醤油漬け'],
+                evaluation: 'ミシュランガイドに掲載。日本人にもファンが多く、安心感のあるお店。サービスも良いと評判。',
+                map_link: '#', blog_link: '#', hours: '11:00-21:30',
+                reservation: true, japanese_support: true, michelin: true,
+                tags: ['台湾料理', '高級店']
+            },
+            {
+                id: 6, name: '金賞軒', type: 'ディナー', budget_min: 700, budget_max: 1200,
+                description: '新鮮な海鮮料理が自慢の台湾料理店。個性的なメニューが楽しめる。',
+                recommended: ['金柑入りの鶏肉ロール', '桜エビおこわ', '牛肉料理'],
+                evaluation: 'ミシュランガイドのビブグルマンに掲載。こじんまりとして落ち着いた雰囲気で、リピーターが多い。',
+                map_link: '#', blog_link: '#', hours: '12:00-14:30, 17:30-21:30 (火曜定休)',
+                reservation: null, japanese_support: null, michelin: true,
+                tags: ['海鮮', '隠れ家']
+            },
+            {
+                id: 7, name: '人和園', type: 'ディナー', budget_min: 500, budget_max: 800,
+                description: '台湾では珍しい雲南料理の専門店。野菜をたっぷり使った優しい味わい。',
+                recommended: ['鶏油豌豆', 'キノコと牛肉の炒め物', 'トリュフ入りスクランブルエッグ'],
+                evaluation: 'ミシュランガイドのビブグルマンに掲載。日本人の口に合う味付けで、安心して食事ができると評判。',
+                map_link: '#', blog_link: '#', hours: '11:30-14:00, 17:30-21:00',
+                reservation: true, japanese_support: true, michelin: true,
+                tags: ['雲南料理', 'ヘルシー']
+            },
+            {
+                id: 8, name: '四平小館', type: 'ディナー', budget_min: 400, budget_max: 700,
+                description: '酸味のある白菜の漬物を使った鍋料理「酸白菜火鍋」が名物。',
+                recommended: ['酸白菜火鍋', 'タロイモのボール'],
+                evaluation: '有名人も御用達の穴場的なお店として知られている。開店前から行列ができるほどの人気店。',
+                map_link: '#', blog_link: '#', hours: '11:30-14:30, 17:00-22:30',
+                reservation: true, japanese_support: null, michelin: false,
+                tags: ['鍋料理', '人気店']
+            }
+        ];
+
+        const grid = document.getElementById('restaurant-grid');
+        const budgetSlider = document.getElementById('budget-filter');
+        const budgetValue = document.getElementById('budget-value');
+        const mealFilterContainer = document.getElementById('meal-type-filter');
+        const featureFilterContainer = document.getElementById('feature-filter');
+
+        let budgetChart;
+        let activeFilters = {
+            meal: 'all',
+            budget: 1500,
+            features: new Set()
+        };
+
+        const renderCards = (data) => {
+            grid.innerHTML = '';
+            data.forEach(r => {
+                const card = document.createElement('div');
+                card.className = `restaurant-card bg-white rounded-2xl shadow-md overflow-hidden transform hover:-translate-y-1 transition-all duration-300 card-enter`;
+                card.dataset.id = r.id;
+                
+                let infoIcons = '';
+                if(r.reservation) infoIcons += `<span class="card-tag">予約可</span>`;
+                if(r.japanese_support) infoIcons += `<span class="card-tag">日本語対応</span>`;
+                if(r.michelin) infoIcons += `<span class="card-tag">ミシュラン</span>`;
+
+                card.innerHTML = `
+                    <div class="p-6 cursor-pointer" data-action="toggle-details">
+                        <div class="flex justify-between items-start">
+                             <h3 class="text-2xl font-bold text-[#8D6E63]">${r.name}</h3>
+                            <div class="text-lg font-semibold text-[#C8A07D]">${r.budget_min}元〜</div>
+                        </div>
+                        <p class="text-gray-600 mt-2">${r.description}</p>
+                        <div class="flex flex-wrap gap-2 mt-4">
+                            ${r.tags.map(tag => `<span class="card-tag">${tag}</span>`).join('')}
+                        </div>
+                    </div>
+                    <div class="details-section" data-section="details">
+                        <div class="px-6 pb-6 pt-2">
+                             <h4 class="font-bold text-gray-700 mb-2">おすすめ料理</h4>
+                             <p class="text-sm text-gray-600 mb-4">${r.recommended.join(' / ')}</p>
+                             <h4 class="font-bold text-gray-700 mb-2">評価</h4>
+                             <p class="text-sm text-gray-600 mb-4">${r.evaluation}</p>
+                             <h4 class="font-bold text-gray-700 mb-2">基本情報</h4>
+                             <div class="flex flex-wrap gap-2 mb-4 text-sm">${infoIcons}</div>
+                             <p class="text-sm text-gray-600"><strong>営業時間:</strong> ${r.hours}</p>
+                             <div class="flex justify-end gap-2 mt-4">
+                                ${r.map_link ? `<a href="${r.map_link}" target="_blank" class="px-4 py-2 bg-[#C8A07D] text-white rounded-full text-xs font-semibold hover:bg-[#b58e6d] transition-colors">地図</a>` : ''}
+                                ${r.blog_link ? `<a href="${r.blog_link}" target="_blank" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-full text-xs font-semibold hover:bg-gray-300 transition-colors">ブログ</a>` : ''}
+                             </div>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        };
+
+        const updateChart = (data) => {
+            const budgetRanges = { '〜600元': 0, '601〜1000元': 0, '1001元〜': 0 };
+            data.forEach(r => {
+                if (r.budget_max <= 600) budgetRanges['〜600元']++;
+                else if (r.budget_max <= 1000) budgetRanges['601〜1000元']++;
+                else budgetRanges['1001元〜']++;
+            });
+
+            if (budgetChart) {
+                budgetChart.data.labels = Object.keys(budgetRanges);
+                budgetChart.data.datasets[0].data = Object.values(budgetRanges);
+                budgetChart.update();
+            }
+        };
+
+        const filterData = () => {
+            const filtered = restaurantData.filter(r => {
+                const mealMatch = activeFilters.meal === 'all' || r.type === activeFilters.meal;
+                const budgetMatch = r.budget_min <= activeFilters.budget;
+                const featureMatch = [...activeFilters.features].every(feature => {
+                    if (feature === 'reservable') return r.reservation;
+                    if (feature === 'japanese-friendly') return r.japanese_support;
+                    if (feature === 'michelin') return r.michelin;
+                    return true;
+                });
+                return mealMatch && budgetMatch && featureMatch;
+            });
+            renderCards(filtered);
+            updateChart(filtered);
+        };
+        
+        budgetSlider.addEventListener('input', (e) => {
+            const value = e.target.value;
+            budgetValue.textContent = `〜 ${value}元`;
+        });
+        
+        budgetSlider.addEventListener('change', (e) => {
+            activeFilters.budget = parseInt(e.target.value);
+            filterData();
+        });
+
+        mealFilterContainer.addEventListener('click', (e) => {
+            if (e.target.tagName === 'BUTTON') {
+                activeFilters.meal = e.target.dataset.filterValue;
+                mealFilterContainer.querySelectorAll('button').forEach(btn => btn.classList.remove('filter-btn-active'));
+                e.target.classList.add('filter-btn-active');
+                filterData();
+            }
+        });
+
+        featureFilterContainer.addEventListener('click', (e) => {
+            if (e.target.tagName === 'BUTTON') {
+                const value = e.target.dataset.filterValue;
+                if (activeFilters.features.has(value)) {
+                    activeFilters.features.delete(value);
+                    e.target.classList.remove('filter-btn-active');
+                } else {
+                    activeFilters.features.add(value);
+                    e.target.classList.add('filter-btn-active');
+                }
+                filterData();
+            }
+        });
+        
+        grid.addEventListener('click', (e) => {
+            const cardHeader = e.target.closest('[data-action="toggle-details"]');
+            if (cardHeader) {
+                const card = cardHeader.closest('.restaurant-card');
+                const details = card.querySelector('[data-section="details"]');
+                details.classList.toggle('open');
+            }
+        });
+
+        const initChart = () => {
+            const ctx = document.getElementById('budgetChart').getContext('2d');
+            Chart.defaults.font.family = "'Inter', 'Noto Sans JP', sans-serif";
+            budgetChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'レストランの数',
+                        data: [],
+                        backgroundColor: '#C8A07D',
+                        borderColor: '#b58e6d',
+                        borderWidth: 1,
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: '#4A4A4A',
+                            titleFont: { size: 14 },
+                            bodyFont: { size: 12 },
+                            padding: 10,
+                            cornerRadius: 8
+                        }
+                    }
+                }
+            });
+        };
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            initChart();
+            filterData();
+        });
+
+    </script>
+</body>
+</html>
