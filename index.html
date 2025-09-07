@@ -10,8 +10,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
     <!-- Chosen Palette: Warm Neutrals -->
-    <!-- Application Structure Plan: このアプリケーションは、ユーザーが個々のニーズ（食事の時間、予算、料理の種類など）に基づいて最適なレストランを迅速に見つけられるよう、フィルター可能なダッシュボード構造を採用しています。静的なリストを単に表示するのではなく、インタラクティブなカードグリッドと連動するコントロールパネルを提供します。ユーザーはまずフィルターで選択肢を絞り込み、視覚的に整理されたカードで概要を把握し、興味を持ったレストランの詳細をクリックして確認するという直感的なフローを設計しました。このタスク指向のアプローチにより、情報探索の効率が大幅に向上し、意思決定が容易になります。 -->
-    <!-- Visualization & Content Choices: 1. レストランリスト -> 目標: 整理・比較 -> 手法: フィルタリング可能なカードグリッド (HTML/Tailwind) -> 操作: フィルター選択によるリアルタイムでのカード表示更新。理由: 多くの選択肢から条件に合うものを効率的に見つけるため。 2. 予算データ -> 目標: 比較 -> 手法: 棒グラフ (Chart.js/Canvas) -> 操作: フィルターに連動してグラフが動的に更新。理由: 選択肢の価格帯分布を視覚的に素早く把握できるため。 3. 詳細情報 -> 目標: 通知 -> 手法: クリックで展開するカード詳細 (HTML/Tailwind) -> 操作: カードクリックで詳細情報の表示・非表示を切り替え。理由: 初期画面の情報量を抑えつつ、詳細へのアクセスを容易にするため。 4. ミシュラン等の評価 -> 目標: 通知 -> 手法: アイコン風バッジ (HTML/CSS) -> 操作: なし。理由: レストランの権威性を一目で伝えるため。 -->
+    <!-- Application Structure Plan: このアプリケーションは、静的なレストランリストとして機能するよう再設計されました。すべての情報がカード形式で表示され、ユーザーは各カードをクリックして詳細情報を確認できます。シンプルで直接的なリスト形式にすることで、特定の情報を探すのではなく、提供されたすべてのレストラン情報を一目で閲覧できるようにしています。 -->
+    <!-- Visualization & Content Choices: 1. レストランリスト -> 目標: 整理・比較 -> 手法: 静的なカードグリッド (HTML/Tailwind) -> 操作: カードクリックで詳細情報の表示・非表示を切り替え。理由: 全ての情報を一覧できるようにするため。 2. 詳細情報 -> 目標: 通知 -> 手法: クリックで展開するカード詳細 (HTML/Tailwind) -> 操作: カードクリックで詳細情報の表示・非表示を切り替え。理由: 初期画面の情報量を抑えつつ、詳細へのアクセスを容易にするため。 3. ミシュラン等の評価 -> 目標: 通知 -> 手法: アイコン風バッジ (HTML/CSS) -> 操作: なし。理由: レストランの権威性を一目で伝えるため。 -->
     <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <style>
         body {
@@ -19,31 +19,12 @@
             background-color: #FDFBF8;
             color: #4A4A4A;
         }
-        .chart-container {
-            position: relative;
-            width: 100%;
-            max-width: 800px;
-            margin-left: auto;
-            margin-right: auto;
-            height: 300px;
-            max-height: 400px;
-        }
-        @media (min-width: 768px) {
-            .chart-container {
-                height: 350px;
-            }
-        }
         .card-enter {
             animation: fadeIn 0.5s ease-out;
         }
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
-        }
-        .filter-btn-active {
-            background-color: #C8A07D !important;
-            color: #FFFFFF !important;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         .card-tag {
             background-color: #EFEAE6;
@@ -72,44 +53,6 @@
             <h1 class="text-4xl md:text-5xl font-bold text-[#8D6E63] mb-2">台北レストランガイド</h1>
             <p class="text-lg text-gray-600">あなたの好みに合わせて最高のお店を見つけよう</p>
         </header>
-
-        <section id="filters" class="bg-white/80 backdrop-blur-sm rounded-2xl p-6 mb-8 shadow-lg sticky top-4 z-10">
-             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div>
-                    <label class="font-bold text-gray-700 mb-2 block">食事の時間</label>
-                    <div id="meal-type-filter" class="flex flex-wrap gap-2">
-                        <button data-filter-group="meal" data-filter-value="all" class="filter-btn-active px-4 py-2 bg-gray-200 text-gray-800 rounded-full text-sm font-semibold transition-all duration-300">すべて</button>
-                        <button data-filter-group="meal" data-filter-value="ランチ" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-full text-sm font-semibold transition-all duration-300">ランチ</button>
-                        <button data-filter-group="meal" data-filter-value="ディナー" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-full text-sm font-semibold transition-all duration-300">ディナー</button>
-                    </div>
-                </div>
-                <div>
-                    <label for="budget-filter" class="font-bold text-gray-700 mb-2 block">予算 (1人あたり)</label>
-                    <div class="flex items-center gap-4">
-                       <input id="budget-filter" type="range" min="300" max="1500" step="100" value="1500" class="w-full h-2 bg-[#EFEAE6] rounded-lg appearance-none cursor-pointer">
-                        <span id="budget-value" class="font-semibold text-[#C8A07D] w-24 text-right">〜 1500元</span>
-                    </div>
-                </div>
-                <div>
-                    <label class="font-bold text-gray-700 mb-2 block">特徴</label>
-                    <div id="feature-filter" class="flex flex-wrap gap-2">
-                        <button data-filter-group="feature" data-filter-value="reservable" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-full text-sm font-semibold transition-all duration-300">予約可能</button>
-                        <button data-filter-group="feature" data-filter-value="japanese-friendly" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-full text-sm font-semibold transition-all duration-300">日本語対応</button>
-                        <button data-filter-group="feature" data-filter-value="michelin" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-full text-sm font-semibold transition-all duration-300">ミシュラン掲載</button>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section id="chart-section" class="mb-8">
-             <div class="bg-white rounded-2xl p-4 md:p-6 shadow-md">
-                <h2 class="text-xl font-bold text-center text-gray-700 mb-4">レストラン予算比較</h2>
-                <p class="text-center text-gray-500 mb-4 text-sm">現在のフィルター条件に一致するレストランの価格帯分布です。お店選びの参考にしてください。</p>
-                <div class="chart-container">
-                    <canvas id="budgetChart"></canvas>
-                </div>
-            </div>
-        </section>
 
         <main id="restaurant-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         </main>
@@ -192,18 +135,7 @@
         ];
 
         const grid = document.getElementById('restaurant-grid');
-        const budgetSlider = document.getElementById('budget-filter');
-        const budgetValue = document.getElementById('budget-value');
-        const mealFilterContainer = document.getElementById('meal-type-filter');
-        const featureFilterContainer = document.getElementById('feature-filter');
-
-        let budgetChart;
-        let activeFilters = {
-            meal: 'all',
-            budget: 1500,
-            features: new Set()
-        };
-
+        
         const renderCards = (data) => {
             grid.innerHTML = '';
             data.forEach(r => {
@@ -247,70 +179,6 @@
             });
         };
 
-        const updateChart = (data) => {
-            const budgetRanges = { '〜600元': 0, '601〜1000元': 0, '1001元〜': 0 };
-            data.forEach(r => {
-                if (r.budget_max <= 600) budgetRanges['〜600元']++;
-                else if (r.budget_max <= 1000) budgetRanges['601〜1000元']++;
-                else budgetRanges['1001元〜']++;
-            });
-
-            if (budgetChart) {
-                budgetChart.data.labels = Object.keys(budgetRanges);
-                budgetChart.data.datasets[0].data = Object.values(budgetRanges);
-                budgetChart.update();
-            }
-        };
-
-        const filterData = () => {
-            const filtered = restaurantData.filter(r => {
-                const mealMatch = activeFilters.meal === 'all' || r.type === activeFilters.meal;
-                const budgetMatch = r.budget_min <= activeFilters.budget;
-                const featureMatch = [...activeFilters.features].every(feature => {
-                    if (feature === 'reservable') return r.reservation;
-                    if (feature === 'japanese-friendly') return r.japanese_support;
-                    if (feature === 'michelin') return r.michelin;
-                    return true;
-                });
-                return mealMatch && budgetMatch && featureMatch;
-            });
-            renderCards(filtered);
-            updateChart(filtered);
-        };
-        
-        budgetSlider.addEventListener('input', (e) => {
-            const value = e.target.value;
-            budgetValue.textContent = `〜 ${value}元`;
-        });
-        
-        budgetSlider.addEventListener('change', (e) => {
-            activeFilters.budget = parseInt(e.target.value);
-            filterData();
-        });
-
-        mealFilterContainer.addEventListener('click', (e) => {
-            if (e.target.tagName === 'BUTTON') {
-                activeFilters.meal = e.target.dataset.filterValue;
-                mealFilterContainer.querySelectorAll('button').forEach(btn => btn.classList.remove('filter-btn-active'));
-                e.target.classList.add('filter-btn-active');
-                filterData();
-            }
-        });
-
-        featureFilterContainer.addEventListener('click', (e) => {
-            if (e.target.tagName === 'BUTTON') {
-                const value = e.target.dataset.filterValue;
-                if (activeFilters.features.has(value)) {
-                    activeFilters.features.delete(value);
-                    e.target.classList.remove('filter-btn-active');
-                } else {
-                    activeFilters.features.add(value);
-                    e.target.classList.add('filter-btn-active');
-                }
-                filterData();
-            }
-        });
-        
         grid.addEventListener('click', (e) => {
             const cardHeader = e.target.closest('[data-action="toggle-details"]');
             if (cardHeader) {
@@ -319,53 +187,9 @@
                 details.classList.toggle('open');
             }
         });
-
-        const initChart = () => {
-            const ctx = document.getElementById('budgetChart').getContext('2d');
-            Chart.defaults.font.family = "'Inter', 'Noto Sans JP', sans-serif";
-            budgetChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: [],
-                    datasets: [{
-                        label: 'レストランの数',
-                        data: [],
-                        backgroundColor: '#C8A07D',
-                        borderColor: '#b58e6d',
-                        borderWidth: 1,
-                        borderRadius: 8
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                stepSize: 1
-                            }
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            display: false
-                        },
-                        tooltip: {
-                            backgroundColor: '#4A4A4A',
-                            titleFont: { size: 14 },
-                            bodyFont: { size: 12 },
-                            padding: 10,
-                            cornerRadius: 8
-                        }
-                    }
-                }
-            });
-        };
         
         document.addEventListener('DOMContentLoaded', () => {
-            initChart();
-            filterData();
+            renderCards(restaurantData);
         });
 
     </script>
