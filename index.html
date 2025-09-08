@@ -11,7 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
     <!-- Chosen Palette: Warm Neutrals -->
     <!-- Application Structure Plan: このアプリケーションは、静的なレストランリストとして機能するよう再設計されました。すべての情報がカード形式で表示され、ユーザーは各カードをクリックして詳細情報を確認できます。シンプルで直接的なリスト形式にすることで、特定の情報を探すのではなく、提供されたすべてのレストラン情報を一目で閲覧できるようにしています。 -->
-    <!-- Visualization & Content Choices: 1. レストランリスト -> 目標: 整理・比較 -> 手法: 静的なカードグリッド (HTML/Tailwind) -> 操作: カードクリックで詳細情報の表示・非表示を切り替え。理由: 全ての情報を一覧できるようにするため。 2. 詳細情報 -> 目標: 通知 -> 手法: クリックで展開するカード詳細 (HTML/Tailwind) -> 操作: カードクリックで詳細情報の表示・非表示を切り替え。理由: 初期画面の情報量を抑えつつ、詳細へのアクセスを容易にするため。 3. ミシュラン等の評価 -> 目標: 通知 -> 手法: アイコン風バッジ (HTML/CSS) -> 操作: なし。理由: レストランの権威性を一目で伝えるため。 -->
+    <!-- Visualization & Content Choices: 1. レストランリスト -> 目標: 整理・比較 -> 手法: 静的なカードグリッド (HTML/Tailwind) -> 操作: カードクリックで詳細情報の表示・非表示を切り替え。「【クリック】」というテキストを追加して開閉状態を視覚的に示します。理由: 全ての情報を一覧できるようにしつつ、各カードがクリック可能であることを明確にするため。 2. 詳細情報 -> 目標: 通知 -> 手法: クリックで展開するカード詳細 (HTML/Tailwind) -> 操作: カードクリックで詳細情報の表示・非表示を切り替え。理由: 初期画面の情報量を抑えつつ、詳細へのアクセスを容易にするため。 3. ミシュラン等の評価 -> 目標: 通知 -> 手法: アイコン風バッジ (HTML/CSS) -> 操作: なし。理由: レストランの権威性を一目で伝えるため。 -->
     <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <style>
         body {
@@ -74,7 +74,7 @@
                 description: '鼎泰豊と並び称される小籠包の人気店。皮が厚めで食べ応えがある。',
                 recommended: ['小籠包', '牡蠣小籠包', '海鮮チャーハン', 'ネギ餅'],
                 evaluation: 'コストパフォーマンスの高さで評価されている。スタッフが親切で、日本語メニューがあるという口コミも多い。',
-                map_link: '#', blog_link: '#', hours: '11:30-14:30, 16:30-21:30',
+                map_link: '#', blog_link: 'https://www.chikanonbe.com/entry/2022/03/22/094045', hours: '11:30-14:30, 16:30-21:30',
                 reservation: true, japanese_support: true, michelin: false,
                 tags: ['小籠包', '高コスパ']
             },
@@ -83,7 +83,7 @@
                 description: '創業50年以上の老舗台湾料理店。鶏料理が名物。',
                 recommended: ['三味鶏', '麻婆豆腐', '卵焼き', '鶏プリン'],
                 evaluation: 'ミシュランガイドのビブグルマンに掲載。高級感のある店構えだが、価格は比較的リーズナブル。',
-                map_link: '#', blog_link: '#', hours: '11:00-22:00',
+                map_link: '#', blog_link: 'https://ganimaly.com/portfolio/2024/05/07/%E3%80%90%E6%97%85%E3%81%94%E3%81%AF%E3%82%93%EF%BD%9C%E5%8F%B0%E5%8C%97%E3%81%A7%E7%83%8F%E9%AA%A8%E9%B6%8F%E3%80%91%E7%BE%8E%E5%91%B3%E3%81%97%E3%81%84%E9%B6%8F%E6%96%99%E7%90%86%E3%82%92%E9%A3%9F/', hours: '11:00-22:00',
                 reservation: true, japanese_support: true, michelin: true,
                 tags: ['鶏料理', '老舗']
             },
@@ -92,7 +92,7 @@
                 description: 'ガチョウ肉の燻製料理が有名。噛めば噛むほど味わい深い。',
                 recommended: ['ガチョウ肉燻製', '鵝油飯（ガチョウ油ご飯）', '鴨血のスープ'],
                 evaluation: 'ミシュランガイドのビブグルマンに掲載。昼時は待ち時間が発生することも。',
-                map_link: '#', blog_link: '#', hours: '11:30-21:00',
+                map_link: '#', blog_link: 'https://ameblo.jp/kazu53016/entry-12923390471.html', hours: '11:30-21:00',
                 reservation: true, japanese_support: false, michelin: true,
                 tags: ['ガチョウ肉', 'ローカル']
             },
@@ -101,7 +101,7 @@
                 description: '創業40年以上の老舗。台北を代表する台湾料理レストラン。',
                 recommended: ['ワタリガニのおこわ', 'レバーステーキ', '豚の角煮', 'シジミの醤油漬け'],
                 evaluation: 'ミシュランガイドに掲載。日本人にもファンが多く、安心感のあるお店。サービスも良いと評判。',
-                map_link: '#', blog_link: '#', hours: '11:00-21:30',
+                map_link: '#', blog_link: 'https://ameblo.jp/mythai-taste-b787/entry-12868465448.html', hours: '11:00-21:30',
                 reservation: true, japanese_support: true, michelin: true,
                 tags: ['台湾料理', '高級店']
             },
@@ -110,7 +110,7 @@
                 description: '新鮮な海鮮料理が自慢の台湾料理店。個性的なメニューが楽しめる。',
                 recommended: ['金柑入りの鶏肉ロール', '桜エビおこわ', '牛肉料理'],
                 evaluation: 'ミシュランガイドのビブグルマンに掲載。こじんまりとして落ち着いた雰囲気で、リピーターが多い。',
-                map_link: '#', blog_link: '#', hours: '12:00-14:30, 17:30-21:30 (火曜定休)',
+                map_link: '#', blog_link: 'https://www.chikanonbe.com/entry/2021/03/24/114726', hours: '12:00-14:30, 17:30-21:30 (火曜定休)',
                 reservation: null, japanese_support: null, michelin: true,
                 tags: ['海鮮', '隠れ家']
             },
@@ -119,7 +119,7 @@
                 description: '台湾では珍しい雲南料理の専門店。野菜をたっぷり使った優しい味わい。',
                 recommended: ['鶏油豌豆', 'キノコと牛肉の炒め物', 'トリュフ入りスクランブルエッグ'],
                 evaluation: 'ミシュランガイドのビブグルマンに掲載。日本人の口に合う味付けで、安心して食事ができると評判。',
-                map_link: '#', blog_link: '#', hours: '11:30-14:00, 17:30-21:00',
+                map_link: '#', blog_link: 'https://ameblo.jp/tabi-iroiro/entry-12880033282.html', hours: '11:30-14:00, 17:30-21:00',
                 reservation: true, japanese_support: true, michelin: true,
                 tags: ['雲南料理', 'ヘルシー']
             },
@@ -128,7 +128,7 @@
                 description: '酸味のある白菜の漬物を使った鍋料理「酸白菜火鍋」が名物。',
                 recommended: ['酸白菜火鍋', 'タロイモのボール'],
                 evaluation: '有名人も御用達の穴場的なお店として知られている。開店前から行列ができるほどの人気店。',
-                map_link: '#', blog_link: '#', hours: '11:30-14:30, 17:00-22:30',
+                map_link: '#', blog_link: 'https://ameblo.jp/jonney-blog08/entry-12887281120.html', hours: '11:30-14:30, 17:00-22:30',
                 reservation: true, japanese_support: null, michelin: false,
                 tags: ['鍋料理', '人気店']
             }
@@ -152,7 +152,10 @@
                     <div class="p-6 cursor-pointer" data-action="toggle-details">
                         <div class="flex justify-between items-start">
                              <h3 class="text-2xl font-bold text-[#8D6E63]">${r.name}</h3>
-                            <div class="text-lg font-semibold text-[#C8A07D]">${r.budget_min}元〜</div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-lg font-semibold text-[#C8A07D]">${r.budget_min}元〜</span>
+                                <span class="text-gray-500 text-sm">【クリック】</span>
+                            </div>
                         </div>
                         <p class="text-gray-600 mt-2">${r.description}</p>
                         <div class="flex flex-wrap gap-2 mt-4">
@@ -169,7 +172,6 @@
                              <div class="flex flex-wrap gap-2 mb-4 text-sm">${infoIcons}</div>
                              <p class="text-sm text-gray-600"><strong>営業時間:</strong> ${r.hours}</p>
                              <div class="flex justify-end gap-2 mt-4">
-                                ${r.map_link ? `<a href="${r.map_link}" target="_blank" class="px-4 py-2 bg-[#C8A07D] text-white rounded-full text-xs font-semibold hover:bg-[#b58e6d] transition-colors">地図</a>` : ''}
                                 ${r.blog_link ? `<a href="${r.blog_link}" target="_blank" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-full text-xs font-semibold hover:bg-gray-300 transition-colors">ブログ</a>` : ''}
                              </div>
                         </div>
@@ -184,6 +186,7 @@
             if (cardHeader) {
                 const card = cardHeader.closest('.restaurant-card');
                 const details = card.querySelector('[data-section="details"]');
+
                 details.classList.toggle('open');
             }
         });
